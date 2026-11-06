@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warp Speed Stars</title>
+    <style>
+        /* Ensure the canvas covers the full viewport without scrollbars */
+        margin: 0;
+        padding: 0;
+        background-color: #000;
+        overflow: hidden;
+        width: 100vw;
+        height: 100vh;
+        
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="space"></canvas>
+
+    <script>
+        // Setup canvas and dimensions
+        const canvas = document.getElementById("space");
+        const c = canvas.getContext("2d");
+
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        // Configuration
+        const numStars = 1000;
+        const stars = [];
+        const focalLength = width;
+        let warpSpeed = 1; // Default speed factor
+
+        // Handle window resizing
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            initStars();
+        });
+
+        // Initialize Star objects with random 3D space positions
+        function initStars() {
+            stars.length = 0; // Clear existing array
+            for (let i = 0; i < numStars; i++) {
+                stars.push({
+                    x: Math.random() * width - width / 2,
+                    y: Math.random() * height - height / 2,
+                    z: Math.random() * width,
+                    oZ: 0 // Original Z coordinate tracking for drawing speed trails
+                });
+            }
+        }
+
+        // Main animation frame loop
+        function updateAndDraw() {
+            // Semi-transparent background clear mimics a motion blur/trail effect
+            c.fillStyle = "rgba(0, 0, 0, 0.2)";
+            c.fillRect(0, 0, width, height);
+
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            for (let i = 0; i < numStars; i++) {
+                let star = stars[i];
+
+                // Cache the current depth before moving it forward
+                star.oZ = star.z;
+                // Move the star closer to the viewer
+                star.z -= warpSpeed;
+
+                // Reset the star to the back once it passes the camera viewport boundaries
+                if (star.z <= 0) {
+                    star.z = width;
+                    star.x = Math.random() * width - width / 2;
+                    star.y = Math.random() * height - height / 2;
+                    star.oZ = star.z;
+                }
+
+                // Project 3D coordinates onto a 2D screen surface
+                let k = focalLength / star.z;
+                let px = star.x * k + centerX;
+                let py = star.y * k + centerY;
+
+                // Calculate the project starting coordinates from the previous frame to create speed lines
+                let oK = focalLength / star.oZ;
+                let opx = star.x * oK + centerX;
+                let opy = star.y * oK + centerY;
+
+                // Render the star vector trail lines if they are within visible screen bounds
+                if (px >= 0 && px <= width && py >= 0 && py <= height) {
+                    c.beginPath();
+                    c.moveTo(opx, opy);
+                    c.lineTo(px, py);
+                    
+                    // Stars appear bright white and fade dynamically relative to proximity
+                    let opacity = 1 - (star.z / width);
+                    c.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+                    c.lineWidth = k * 0.5; // Star size increases as it approaches the viewport
+                    c.stroke();
+                }
+            }
+
+            requestAnimationFrame(updateAndDraw);
+        }
+
+        // Interactivity: Dynamically shift warp speed scaling on mouse movements
+        window.addEventListener('mousemove', (e) => {
+            // Speed up significantly based on your cursor's horizontal position
+            warpSpeed = (e.clientX / width) * 25 + 1;
+        });
+
+        // Bootstrap execution
+        initStars();
+        updateAndDraw();
+    </script>
+</body>
+</html>
