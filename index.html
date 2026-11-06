@@ -1,120 +1,485 @@
+
 <!DOCTYPE html>
-<html lang="en-us">
-  <head>
-    <base href="https://rawcdn.githack.com/genizy/web-port/f80c14f1508260870d9b10f5acbf73fc4b77764e/speed-stars/index.html">
-    <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity WebGL Player | Speed Stars</title>
-    <link rel="shortcut icon" href="TemplateData/favicon.ico">
-    <link rel="stylesheet" href="TemplateData/style.css">
-    <style>
-      html,
-      body {
-          margin: 0;
-          padding: 0;
-          overflow: hidden;
-          height: 100%;
-          width: 100%;
-      }
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Speed Stars - Play Online</title>
 
-      #unity-container {
-          width: 100%;
-          height: 100%;
-          position: fixed;
-          top: 0;
-          left: 0;
-      }
-  </style>
-  </head>
-  <body>
-    <div id="unity-container" class="unity-desktop">
-      <canvas id="unity-canvas" width=960 height=600></canvas>
-      <div id="unity-loading-bar">
-        <div id="unity-logo"></div>
-        <div id="unity-progress-bar-empty">
-          <div id="unity-progress-bar-full"></div>
-        </div>
-      </div>
-      <div id="unity-warning"> </div>
-    </div>
-    <script>
-      var container = document.querySelector("#unity-container");
-      var canvas = document.querySelector("#unity-canvas");
-      var loadingBar = document.querySelector("#unity-loading-bar");
-      var progressBarFull = document.querySelector("#unity-progress-bar-full");
+<style>
+:root {
+  --bg:#101116;
+  --panel:#1b1d26;
+  --yellow:#ffcf32;
+  --muted:#a5a7b1;
+}
+* {box-sizing:border-box;margin:0;padding:0}
+body {
+  background:var(--bg);
+  color:#fff;
+  font-family:Arial,sans-serif;
+}
+header {
+  height:70px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 6%;
+  background:#191a21;
+  border-bottom:1px solid #30313a;
+}
+.logo {font-size:23px;font-weight:900;color:var(--yellow)}
+nav {display:flex;gap:25px}
+nav a {color:white;text-decoration:none;font-size:14px}
+nav a:hover {color:var(--yellow)}
+.hero {text-align:center;padding:35px 15px 25px}
+.hero h1 {font-size:42px;color:var(--yellow)}
+.hero p {color:var(--muted);margin-top:12px}
+.container {max-width:1100px;margin:auto;padding:15px}
+.game {
+  background:#20232c;
+  border:1px solid #383b47;
+  border-radius:12px;
+  overflow:hidden;
+}
+.game-top {
+  padding:14px 20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.game-top span {color:var(--yellow)}
+canvas {
+  display:block;
+  width:100%;
+  background:#171a23;
+  aspect-ratio:16/8;
+  max-height:450px;
+}
+.controls {
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  padding:16px;
+  flex-wrap:wrap;
+}
+button {
+  background:var(--yellow);
+  color:#111;
+  border:0;
+  border-radius:7px;
+  padding:12px 22px;
+  font-weight:bold;
+  cursor:pointer;
+}
+button:hover {filter:brightness(1.12)}
+button.secondary {background:#383b47;color:white}
+.stats {
+  display:flex;
+  justify-content:center;
+  gap:35px;
+  padding:15px;
+  color:var(--muted);
+}
+.stats strong {color:white}
+.section {margin-top:45px}
+.section h2 {
+  font-size:23px;
+  margin-bottom:20px;
+}
+.section p {
+  color:#b7b8c0;
+  line-height:1.8;
+  margin-bottom:15px;
+}
+.grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(155px,1fr));
+  gap:15px;
+}
+.game-card {
+  background:var(--panel);
+  border-radius:9px;
+  overflow:hidden;
+  border:1px solid #30313a;
+  transition:.2s;
+}
+.game-card:hover {transform:translateY(-4px)}
+.game-card img {
+  width:100%;
+  height:105px;
+  object-fit:cover;
+  background:#292c37;
+}
+.game-card div {padding:12px;font-weight:bold}
+.gallery img {
+  width:100%;
+  height:150px;
+  object-fit:cover;
+  border-radius:9px;
+  background:#292c37;
+}
+.gallery {display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.gallery-item {text-align:center;color:var(--muted);font-size:13px}
+.gallery-item img {margin-bottom:8px}
+footer {
+  margin-top:55px;
+  background:#191a21;
+  padding:35px 6%;
+  text-align:center;
+  color:var(--muted);
+}
+footer a {color:white;margin:10px;text-decoration:none}
+#message {color:var(--yellow);text-align:center;padding:8px}
+@media(max-width:600px) {
+  nav {gap:10px}
+  nav a {font-size:12px}
+  .hero h1 {font-size:32px}
+  canvas {aspect-ratio:4/3}
+  .stats {gap:15px;font-size:13px}
+}
+</style>
+</head>
 
-      // Shows a temporary message banner/ribbon for a few seconds, or
-      // a permanent error message on top of the canvas if type=='error'.
-      // If type=='warning', a yellow highlight color is used.
-      // Modify or remove this function to customize the visually presented
-      // way that non-critical warnings and error messages are presented to the
-      // user.
-      function unityShowBanner(msg, type) {
+<body>
 
-      }
+<header>
+  <div class="logo">⚡ SPEED STARS</div>
+  <nav>
+    <a href="#">Home</a>
+    <a href="#play">Play</a>
+    <a href="#about">About</a>
+  </nav>
+</header>
 
-      var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/webgl.loader.js";
-      var config = {
-        dataUrl: buildUrl + "/webgl.data",
-        frameworkUrl: buildUrl + "/webgl.framework.js",
-        codeUrl: buildUrl + "/webgl.wasm",
-        streamingAssetsUrl: "StreamingAssets",
-        companyName: "Luke Doukakis",
-        productName: "Speed Stars",
-        productVersion: "1.0",
-        showBanner: unityShowBanner,
-      };
+<div class="hero">
+  <h1>Speed Stars online</h1>
+  <p>Race your way to victory. Become the fastest runner!</p>
+</div>
 
-      // By default Unity keeps WebGL canvas render target size matched with
-      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
-      // Set this to false if you want to decouple this synchronization from
-      // happening inside the engine, and you would instead like to size up
-      // the canvas DOM size and WebGL render target sizes yourself.
-      // config.matchWebGLToCanvasSize = false;
+<main class="container">
 
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        // Mobile device style: fill the whole browser client area with the game canvas:
+<section class="game" id="play">
+  <div class="game-top">
+    <strong>🏃 Speed Stars</strong>
+    <span id="gameStatus">READY</span>
+  </div>
 
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
-        container.className = "unity-mobile";
+  <canvas id="track" width="1000" height="500"></canvas>
 
-        // To lower canvas resolution on mobile devices to gain some
-        // performance, uncomment the following line:
-        // config.devicePixelRatio = 1;
+  <div class="stats">
+    <div>TIME: <strong id="time">0.00</strong></div>
+    <div>SPEED: <strong id="speed">0</strong></div>
+    <div>DISTANCE: <strong id="distance">0</strong>m</div>
+  </div>
 
-        canvas.style.width = window.innerWidth + 'px';
-        canvas.style.height = window.innerHeight + 'px';
+  <p id="message">Press START to begin your race!</p>
 
-        unityShowBanner('WebGL builds are not supported on mobile devices.');
-      } else {
-        function resizeCanvas() {
-          canvas.width = window.innerWidth;
-          canvas.height = window.innerHeight;
-          canvas.style.width = window.innerWidth + "px";
-          canvas.style.height = window.innerHeight + "px";
-        }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-      }
+  <div class="controls">
+    <button onclick="startGame()">START RACE</button>
+    <button class="secondary" onclick="resetGame()">RESET</button>
+  </div>
 
-      loadingBar.style.display = "block";
+  <div class="controls">
+    <button id="leftBtn" class="secondary">LEFT</button>
+    <button id="rightBtn" class="secondary">RIGHT</button>
+  </div>
+</section>
 
-      var script = document.createElement("script");
-      script.src = loaderUrl;
-      script.onload = () => {
-        createUnityInstance(canvas, config, (progress) => {
-          progressBarFull.style.width = 100 * progress + "%";
-        }).then((unityInstance) => {
-          loadingBar.style.display = "none";
-        }).catch((message) => {
-          alert(message);
-        });
-      };
-      document.body.appendChild(script);
-    </script>
-  </body>
+<section class="section">
+  <h2>Games you might also like</h2>
+  <div class="grid" id="games"></div>
+</section>
+
+<section class="section" id="about">
+  <h2>Speed Stars Game Overview</h2>
+  <p>
+    Speed Stars is a fast-paced athletics racing game.
+    Control your character's running rhythm, compete in
+    sprint events, and try to achieve your fastest time.
+  </p>
+
+  <h2>How to Play Speed Stars</h2>
+  <p>
+    Alternate between the left and right controls to
+    accelerate your runner. Timing and rhythm are
+    important to maintaining your speed.
+  </p>
+
+  <h2>PC and Mobile Controls</h2>
+  <p>
+    PC: Use A and D or the arrow keys.
+    Mobile: Tap the LEFT and RIGHT buttons.
+  </p>
+
+  <h2>Tips and Tricks</h2>
+  <p>
+    Maintain a steady rhythm, avoid tapping too quickly,
+    and practice to improve your sprint times.
+  </p>
+</section>
+
+<section class="section">
+  <h2>Character Customization Showcase</h2>
+  <p>Explore different runner outfit styles.</p>
+  <div class="gallery" id="gallery"></div>
+</section>
+
+<section class="section">
+  <h2>Speed Stars Levels and Events</h2>
+  <p>🏁 100m Sprint - Test your acceleration.</p>
+  <p>🏁 200m Sprint - Maintain your running rhythm.</p>
+  <p>🏁 400m Sprint - Manage your energy.</p>
+  <p>🏁 Hurdles - Test your timing and coordination.</p>
+</section>
+
+<section class="section">
+  <h2>Frequently Asked Questions</h2>
+  <p><strong>How do I run faster?</strong><br>
+  Practice alternating your left and right controls.</p>
+
+  <p><strong>Can I play on mobile?</strong><br>
+  Yes, this recreation supports touch controls.</p>
+
+  <p><strong>Is this the original Speed Stars game?</strong><br>
+  No. This is an independent playable demo and website recreation.</p>
+</section>
+
+</main>
+
+<footer>
+  <h2>⚡ SPEED STARS</h2>
+  <p>Race your way to victory!</p>
+  <br>
+  <a href="#">Home</a>
+  <a href="#play">Play</a>
+  <a href="#about">About</a>
+  <p style="margin-top:20px">© 2026 Speed Stars Fan Recreation</p>
+</footer>
+
+<script>
+// GAME DEMO
+const canvas = document.getElementById("track");
+const ctx = canvas.getContext("2d");
+
+let running = false;
+let distance = 0;
+let speed = 0;
+let elapsed = 0;
+let lastTime = 0;
+let lane = 0;
+let frame = 0;
+
+function drawTrack() {
+  ctx.clearRect(0,0,1000,500);
+
+  ctx.fillStyle="#242936";
+  ctx.fillRect(0,0,1000,500);
+
+  ctx.fillStyle="#333846";
+  ctx.fillRect(0,180,1000,260);
+
+  for(let i=0;i<5;i++){
+    ctx.strokeStyle="#858b99";
+    ctx.lineWidth=2;
+    ctx.setLineDash([25,20]);
+    ctx.beginPath();
+    ctx.moveTo(0,220+i*48);
+    ctx.lineTo(1000,220+i*48);
+    ctx.stroke();
+  }
+
+  ctx.setLineDash([]);
+
+  ctx.fillStyle="#ffcf32";
+  ctx.fillRect(850,180,5,260);
+
+  // Runner
+  const x=250;
+  const y=280+lane;
+
+  ctx.fillStyle="#ffcf32";
+  ctx.beginPath();
+  ctx.arc(x,y-55,16,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.strokeStyle="#fff";
+  ctx.lineWidth=10;
+  ctx.lineCap="round";
+
+  ctx.beginPath();
+  ctx.moveTo(x,y-38);
+  ctx.lineTo(x,y+5);
+  ctx.stroke();
+
+  let swing=Math.sin(frame/3)*24;
+
+  ctx.strokeStyle="#65b9ff";
+  ctx.lineWidth=9;
+
+  ctx.beginPath();
+  ctx.moveTo(x,y-25);
+  ctx.lineTo(x-20+swing,y-5);
+  ctx.moveTo(x,y-25);
+  ctx.lineTo(x+20-swing,y-5);
+  ctx.stroke();
+
+  ctx.strokeStyle="#fff";
+  ctx.lineWidth=10;
+
+  ctx.beginPath();
+  ctx.moveTo(x,y+5);
+  ctx.lineTo(x-15+swing,y+40);
+  ctx.moveTo(x,y+5);
+  ctx.lineTo(x+15-swing,y+40);
+  ctx.stroke();
+
+  ctx.fillStyle="#fff";
+  ctx.font="bold 24px Arial";
+  ctx.fillText("100M SPRINT",35,55);
+
+  ctx.font="18px Arial";
+  ctx.fillText("ALTERNATE LEFT + RIGHT",35,85);
+}
+
+function updateUI(){
+  document.getElementById("time").textContent=elapsed.toFixed(2);
+  document.getElementById("speed").textContent=Math.round(speed);
+  document.getElementById("distance").textContent=Math.min(100,Math.floor(distance));
+}
+
+function startGame(){
+  if(running)return;
+  resetGame();
+  running=true;
+  lastTime=performance.now();
+  document.getElementById("gameStatus").textContent="RUNNING";
+  document.getElementById("message").textContent=
+    "Alternate A and D or LEFT and RIGHT!";
+  requestAnimationFrame(loop);
+}
+
+function loop(now){
+  if(!running)return;
+
+  let dt=Math.min((now-lastTime)/1000,0.05);
+  lastTime=now;
+  elapsed+=dt;
+
+  speed=Math.max(0,speed-dt*3);
+  distance+=speed*dt/3;
+  frame+=dt*speed;
+
+  if(distance>=100){
+    distance=100;
+    running=false;
+    document.getElementById("gameStatus").textContent="FINISHED";
+    document.getElementById("message").textContent=
+      "🏆 FINISH! Your time: "+elapsed.toFixed(2)+" seconds";
+  }
+
+  drawTrack();
+  updateUI();
+
+  if(running)requestAnimationFrame(loop);
+}
+
+function tap(side){
+  if(!running)return;
+  speed=Math.min(35,speed+4.5);
+  lane=side==="left"?-5:5;
+  setTimeout(()=>lane=0,100);
+}
+
+document.addEventListener("keydown",e=>{
+  if(e.repeat)return;
+  if(e.key==="a"||e.key==="ArrowLeft")tap("left");
+  if(e.key==="d"||e.key==="ArrowRight")tap("right");
+});
+
+function bindButton(id,side){
+  const btn=document.getElementById(id);
+  btn.addEventListener("pointerdown",e=>{
+    e.preventDefault();
+    tap(side);
+  });
+}
+bindButton("leftBtn","left");
+bindButton("rightBtn","right");
+
+function resetGame(){
+  running=false;
+  distance=0;
+  speed=0;
+  elapsed=0;
+  frame=0;
+  lane=0;
+  updateUI();
+  drawTrack();
+  document.getElementById("gameStatus").textContent="READY";
+  document.getElementById("message").textContent=
+    "Press START to begin your race!";
+}
+
+drawTrack();
+
+// GAME RECOMMENDATIONS
+const games=[
+ "Crazy Cars",
+ "Fireboy and Watergirl",
+ "Blumgi Rocket",
+ "Steal Brainrot Duel",
+ "Level Devil",
+ "Stickman Hook",
+ "Drive Mad",
+ "Slope 3D",
+ "Snake 2048",
+ "Rolling Balls",
+ "Geometry Arrow",
+ "Color Road"
+];
+
+const gameBox=document.getElementById("games");
+
+games.forEach((name,i)=>{
+  const card=document.createElement("div");
+  card.className="game-card";
+  card.innerHTML=`
+    <img src="https://placehold.co/300x160/292c37/ffcf32?text=${encodeURIComponent(name)}"
+    alt="${name}">
+    <div>${name}</div>`;
+  gameBox.appendChild(card);
+});
+
+// CHARACTER GALLERY
+const gallery=document.getElementById("gallery");
+
+const colors=[
+ "#3196ff","#9139d5","#43c76a","#42d8e9",
+ "#f4d44b","#e84747","#fff","#e77bca"
+];
+
+colors.forEach((color,i)=>{
+  const item=document.createElement("div");
+  item.className="gallery-item";
+  item.innerHTML=`
+    <svg viewBox="0 0 120 150" role="img"
+    aria-label="Runner outfit ${i+1}">
+      <circle cx="60" cy="25" r="15" fill="#dca77f"/>
+      <path d="M42 45 L78 45 L86 95 L34 95 Z"
+      fill="${color}"/>
+      <path d="M40 95 L55 95 L52 140 L35 140 Z"
+      fill="#333"/>
+      <path d="M65 95 L80 95 L85 140 L65 140 Z"
+      fill="#222"/>
+      <path d="M43 53 L20 88 M77 53 L100 88"
+      stroke="#dca77f" stroke-width="10"
+      stroke-linecap="round"/>
+    </svg>
+    Outfit ${i+1}`;
+  gallery.appendChild(item);
+});
+</script>
+
+</body>
 </html>
