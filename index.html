@@ -1,127 +1,120 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Warp Speed Stars</title>
+<html lang="en-us">
+  <head>
+    <base href="https://rawcdn.githack.com/genizy/web-port/f80c14f1508260870d9b10f5acbf73fc4b77764e/speed-stars/index.html">
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Unity WebGL Player | Speed Stars</title>
+    <link rel="shortcut icon" href="TemplateData/favicon.ico">
+    <link rel="stylesheet" href="TemplateData/style.css">
     <style>
-        /* Ensure the canvas covers the full viewport without scrollbars */
-        margin: 0;
-        padding: 0;
-        background-color: #000;
-        overflow: hidden;
-        width: 100vw;
-        height: 100vh;
-        
-        canvas {
-            display: block;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-    </style>
-</head>
-<body>
+      html,
+      body {
+          margin: 0;
+          padding: 0;
+          overflow: hidden;
+          height: 100%;
+          width: 100%;
+      }
 
-    <canvas id="space"></canvas>
-
+      #unity-container {
+          width: 100%;
+          height: 100%;
+          position: fixed;
+          top: 0;
+          left: 0;
+      }
+  </style>
+  </head>
+  <body>
+    <div id="unity-container" class="unity-desktop">
+      <canvas id="unity-canvas" width=960 height=600></canvas>
+      <div id="unity-loading-bar">
+        <div id="unity-logo"></div>
+        <div id="unity-progress-bar-empty">
+          <div id="unity-progress-bar-full"></div>
+        </div>
+      </div>
+      <div id="unity-warning"> </div>
+    </div>
     <script>
-        // Setup canvas and dimensions
-        const canvas = document.getElementById("space");
-        const c = canvas.getContext("2d");
+      var container = document.querySelector("#unity-container");
+      var canvas = document.querySelector("#unity-canvas");
+      var loadingBar = document.querySelector("#unity-loading-bar");
+      var progressBarFull = document.querySelector("#unity-progress-bar-full");
 
-        let width = canvas.width = window.innerWidth;
-        let height = canvas.height = window.innerHeight;
+      // Shows a temporary message banner/ribbon for a few seconds, or
+      // a permanent error message on top of the canvas if type=='error'.
+      // If type=='warning', a yellow highlight color is used.
+      // Modify or remove this function to customize the visually presented
+      // way that non-critical warnings and error messages are presented to the
+      // user.
+      function unityShowBanner(msg, type) {
 
-        // Configuration
-        const numStars = 1000;
-        const stars = [];
-        const focalLength = width;
-        let warpSpeed = 1; // Default speed factor
+      }
 
-        // Handle window resizing
-        window.addEventListener('resize', () => {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-            initStars();
-        });
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/webgl.loader.js";
+      var config = {
+        dataUrl: buildUrl + "/webgl.data",
+        frameworkUrl: buildUrl + "/webgl.framework.js",
+        codeUrl: buildUrl + "/webgl.wasm",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "Luke Doukakis",
+        productName: "Speed Stars",
+        productVersion: "1.0",
+        showBanner: unityShowBanner,
+      };
 
-        // Initialize Star objects with random 3D space positions
-        function initStars() {
-            stars.length = 0; // Clear existing array
-            for (let i = 0; i < numStars; i++) {
-                stars.push({
-                    x: Math.random() * width - width / 2,
-                    y: Math.random() * height - height / 2,
-                    z: Math.random() * width,
-                    oZ: 0 // Original Z coordinate tracking for drawing speed trails
-                });
-            }
+      // By default Unity keeps WebGL canvas render target size matched with
+      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
+      // Set this to false if you want to decouple this synchronization from
+      // happening inside the engine, and you would instead like to size up
+      // the canvas DOM size and WebGL render target sizes yourself.
+      // config.matchWebGLToCanvasSize = false;
+
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        // Mobile device style: fill the whole browser client area with the game canvas:
+
+        var meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+        document.getElementsByTagName('head')[0].appendChild(meta);
+        container.className = "unity-mobile";
+
+        // To lower canvas resolution on mobile devices to gain some
+        // performance, uncomment the following line:
+        // config.devicePixelRatio = 1;
+
+        canvas.style.width = window.innerWidth + 'px';
+        canvas.style.height = window.innerHeight + 'px';
+
+        unityShowBanner('WebGL builds are not supported on mobile devices.');
+      } else {
+        function resizeCanvas() {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+          canvas.style.width = window.innerWidth + "px";
+          canvas.style.height = window.innerHeight + "px";
         }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+      }
 
-        // Main animation frame loop
-        function updateAndDraw() {
-            // Semi-transparent background clear mimics a motion blur/trail effect
-            c.fillStyle = "rgba(0, 0, 0, 0.2)";
-            c.fillRect(0, 0, width, height);
+      loadingBar.style.display = "block";
 
-            const centerX = width / 2;
-            const centerY = height / 2;
-
-            for (let i = 0; i < numStars; i++) {
-                let star = stars[i];
-
-                // Cache the current depth before moving it forward
-                star.oZ = star.z;
-                // Move the star closer to the viewer
-                star.z -= warpSpeed;
-
-                // Reset the star to the back once it passes the camera viewport boundaries
-                if (star.z <= 0) {
-                    star.z = width;
-                    star.x = Math.random() * width - width / 2;
-                    star.y = Math.random() * height - height / 2;
-                    star.oZ = star.z;
-                }
-
-                // Project 3D coordinates onto a 2D screen surface
-                let k = focalLength / star.z;
-                let px = star.x * k + centerX;
-                let py = star.y * k + centerY;
-
-                // Calculate the project starting coordinates from the previous frame to create speed lines
-                let oK = focalLength / star.oZ;
-                let opx = star.x * oK + centerX;
-                let opy = star.y * oK + centerY;
-
-                // Render the star vector trail lines if they are within visible screen bounds
-                if (px >= 0 && px <= width && py >= 0 && py <= height) {
-                    c.beginPath();
-                    c.moveTo(opx, opy);
-                    c.lineTo(px, py);
-                    
-                    // Stars appear bright white and fade dynamically relative to proximity
-                    let opacity = 1 - (star.z / width);
-                    c.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
-                    c.lineWidth = k * 0.5; // Star size increases as it approaches the viewport
-                    c.stroke();
-                }
-            }
-
-            requestAnimationFrame(updateAndDraw);
-        }
-
-        // Interactivity: Dynamically shift warp speed scaling on mouse movements
-        window.addEventListener('mousemove', (e) => {
-            // Speed up significantly based on your cursor's horizontal position
-            warpSpeed = (e.clientX / width) * 25 + 1;
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = () => {
+        createUnityInstance(canvas, config, (progress) => {
+          progressBarFull.style.width = 100 * progress + "%";
+        }).then((unityInstance) => {
+          loadingBar.style.display = "none";
+        }).catch((message) => {
+          alert(message);
         });
-
-        // Bootstrap execution
-        initStars();
-        updateAndDraw();
+      };
+      document.body.appendChild(script);
     </script>
-</body>
+  </body>
 </html>
